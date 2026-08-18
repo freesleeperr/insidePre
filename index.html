@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INSIDE 渲染分层实验室</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<canvas id="gl"></canvas>
+
+<!-- 分屏对比标签 + 手柄 -->
+<div id="wipeUI" hidden>
+  <div id="wipeHandle"><span>⇄</span></div>
+  <div class="wipeTag left"  id="wipeTagL">对比侧</div>
+  <div class="wipeTag right" id="wipeTagR">当前侧</div>
+</div>
+
+<!-- 顶栏：五层开关 -->
+<header id="topbar">
+  <div class="brand">INSIDE<span>渲染分层实验室</span></div>
+
+  <nav id="layers">
+    <button class="layer on" data-layer="base"><i>1</i><em>基础光照</em><small>base lighting</small></button>
+    <button class="layer" data-layer="fog"><i>2</i><em>体积雾</em><small>volumetrics</small></button>
+    <button class="layer" data-layer="ao"><i>3</i><em>解析 AO</em><small>analytic AO</small></button>
+    <button class="layer" data-layer="ssr"><i>4</i><em>屏幕空间反射</em><small>SSR</small></button>
+    <button class="layer" data-layer="dither"><i>5</i><em>抖动</em><small>dither</small></button>
+  </nav>
+
+  <div class="steps">
+    <button id="stepPrev" title="上一层 (←)">◀</button>
+    <span id="stepLabel">第 1 层 · 只有基础光照</span>
+    <button id="stepNext" title="下一层 (→ / 空格)">▶</button>
+  </div>
+
+  <div class="tools">
+    <button id="btnWipe"  title="分屏对比 (W)">分屏</button>
+    <button id="btnMag"   title="放大镜 (M)">放大镜</button>
+    <button id="btnNotes" title="讲解词 (N)">讲解词</button>
+    <button id="btnPanel" title="参数面板 (P)">参数</button>
+    <button id="btnClean" title="全隐藏 · 纯画面 (H)">纯画面</button>
+    <button id="btnHelp"  title="快捷键 (?)">?</button>
+  </div>
+</header>
+
+<!-- 右侧参数面板 -->
+<aside id="panel"></aside>
+
+<!-- 讲解词抽屉 -->
+<section id="notes">
+  <div class="nhead">
+    <h3 id="nTitle">讲解词</h3>
+    <div class="nmeta"><span id="nTime"></span><button id="nClose">×</button></div>
+  </div>
+  <div class="nbody" id="nBody"></div>
+</section>
+
+<!-- HUD -->
+<div id="hud"><span id="fps">–</span><span id="resInfo"></span><span id="hint">拖动画面可移动选中的 AO 体</span></div>
+
+<!-- 快捷键 -->
+<div id="help" hidden><div class="hcard">
+  <h3>快捷键</h3>
+  <table>
+    <tr><td>1 – 5</td><td>开关对应的一层</td></tr>
+    <tr><td>0 / 9</td><td>全关（只剩基础光照） / 全开</td></tr>
+    <tr><td>← → / 空格</td><td>逐层演示：上一层 / 下一层</td></tr>
+    <tr><td>W</td><td>分屏对比（左＝对比状态，右＝当前状态）</td></tr>
+    <tr><td>M</td><td>放大镜（讲 banding 时用）</td></tr>
+    <tr><td>G</td><td>底部渐变测试条</td></tr>
+    <tr><td>C</td><td>角色走动 开 / 停</td></tr>
+    <tr><td>V</td><td>显示 AO 几何体（美术的“阴影笔”）</td></tr>
+    <tr><td>Z X</td><td>切换机位（默认不动机位）</td></tr>
+    <tr><td>N / P / H</td><td>讲解词 / 参数面板 / 纯画面</td></tr>
+    <tr><td>R</td><td>恢复默认参数</td></tr>
+    <tr><td>鼠标拖拽</td><td>移动当前选中的 AO 几何体</td></tr>
+  </table>
+  <p class="hclose">点任意处关闭</p>
+</div></div>
+
+<!-- 着色器编译错误显示 -->
+<div id="err" hidden><pre id="errText"></pre></div>
+
+<script src="js/shaders.js"></script>
+<script src="js/gl.js"></script>
+<script src="js/params.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

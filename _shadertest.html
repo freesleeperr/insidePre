@@ -1,0 +1,37 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>t</title></head><body>
+<canvas id="gl" width="320" height="200"></canvas>
+<pre id="out">RUNNING</pre>
+<script src="js/shaders.js"></script>
+<script>
+var out = [];
+var gl = document.getElementById('gl').getContext('webgl2');
+if(!gl){ out.push('NO_WEBGL2'); }
+else{
+  out.push('WEBGL2 OK; float=' + !!gl.getExtension('EXT_color_buffer_float'));
+  function comp(type, src, tag){
+    var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+      var log = gl.getShaderInfoLog(s);
+      out.push('FAIL ' + tag + '\n' + log);
+      var lines = src.split('\n');
+      (log.match(/\d+:(\d+)/g)||[]).forEach(function(m){
+        var ln = parseInt(m.split(':')[1],10);
+        for(var i=Math.max(0,ln-2);i<Math.min(lines.length,ln+1);i++) out.push('   '+(i+1)+' | '+lines[i]);
+      });
+      return null;
+    }
+    out.push('ok ' + tag);
+    return s;
+  }
+  [['scene',SH.sceneFS],['fog',SH.fogFS],['comp',SH.compFS],['present',SH.presentFS]].forEach(function(e){
+    var vs = comp(gl.VERTEX_SHADER, SH.vert, 'vert');
+    var fs = comp(gl.FRAGMENT_SHADER, e[1], e[0]);
+    if(vs && fs){
+      var p = gl.createProgram(); gl.attachShader(p,vs); gl.attachShader(p,fs); gl.linkProgram(p);
+      if(!gl.getProgramParameter(p, gl.LINK_STATUS)) out.push('LINKFAIL ' + e[0] + '\n' + gl.getProgramInfoLog(p));
+      else out.push('link ok ' + e[0]);
+    }
+  });
+}
+document.getElementById('out').textContent = out.join('\n');
+</script></body></html>

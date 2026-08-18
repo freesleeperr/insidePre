@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>diag</title>
+<link rel="stylesheet" href="css/app.css">
+<style>#gl{position:static !important;width:200px;height:130px}#diag{position:fixed;left:0;top:0;z-index:9999;color:#fff;background:#000;font:11px monospace}</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="wipeUI" hidden><div id="wipeHandle"><span>x</span></div><div class="wipeTag left" id="wipeTagL">L</div><div class="wipeTag right" id="wipeTagR">R</div></div>
+<header id="topbar">
+  <div class="brand">INSIDE<span>lab</span></div>
+  <nav id="layers">
+    <button class="layer on" data-layer="base"><i>1</i><em>a</em><small>a</small></button>
+    <button class="layer" data-layer="fog"><i>2</i><em>b</em><small>b</small></button>
+    <button class="layer" data-layer="ao"><i>3</i><em>c</em><small>c</small></button>
+    <button class="layer" data-layer="ssr"><i>4</i><em>d</em><small>d</small></button>
+    <button class="layer" data-layer="dither"><i>5</i><em>e</em><small>e</small></button>
+  </nav>
+  <div class="steps"><button id="stepPrev">P</button><span id="stepLabel"></span><button id="stepNext">N</button></div>
+  <div class="tools">
+    <button id="btnWipe">w</button><button id="btnMag">m</button><button id="btnNotes">n</button>
+    <button id="btnPanel">p</button><button id="btnClean">h</button><button id="btnHelp">?</button>
+  </div>
+</header>
+<aside id="panel"></aside>
+<section id="notes"><div class="nhead"><h3 id="nTitle"></h3><div class="nmeta"><span id="nTime"></span><button id="nClose">x</button></div></div><div class="nbody" id="nBody"></div></section>
+<div id="hud"><span id="fps"></span><span id="resInfo"></span><span id="hint"></span></div>
+<div id="help" hidden><div class="hcard"></div></div>
+<div id="err" hidden><pre id="errText"></pre></div>
+
+<script src="js/shaders.js"></script>
+<script src="js/gl.js"></script>
+<script src="js/params.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  var log = [];
+  function num(f){ return Array.prototype.map.call(f, function(x){ return (+x).toFixed(4); }).join(','); }
+  try{
+    App.frame(16);
+    var gl = App.gl;
+    log.push('glErr=' + gl.getError());
+    log.push('sceneOK=' + App.fboScene.ok + ' fogOK=' + App.fboFog.ok + ' compOK=' + App.fboComp.ok);
+    log.push('W=' + App.W + ' H=' + App.H + ' sw=' + App.sw + ' fw=' + App.fw);
+    log.push('camF=' + App.cam.F.map(function(x){ return x.toFixed(3); }).join(','));
+    function rd(fb, att, w, h, fx, fy){
+      var f = new Float32Array(4);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.readBuffer(gl.COLOR_ATTACHMENT0 + att);
+      gl.readPixels(Math.floor(w * fx), Math.floor(h * fy), 1, 1, gl.RGBA, gl.FLOAT, f);
+      return num(f);
+    }
+    log.push('sceneCol_mid=' + rd(App.fboScene.fb, 0, App.sw, App.sh, 0.30, 0.45));
+    log.push('gbuf_mid=' + rd(App.fboScene.fb, 1, App.sw, App.sh, 0.30, 0.45));
+    log.push('sceneCol_sky=' + rd(App.fboScene.fb, 0, App.sw, App.sh, 0.10, 0.92));
+    log.push('gbuf_sky=' + rd(App.fboScene.fb, 1, App.sw, App.sh, 0.10, 0.92));
+    log.push('sceneCol_floor=' + rd(App.fboScene.fb, 0, App.sw, App.sh, 0.50, 0.12));
+    log.push('fog_mid=' + rd(App.fboFog.fb, 0, App.fw, App.fh, 0.30, 0.45));
+    log.push('comp_mid=' + rd(App.fboComp.fb, 0, App.sw, App.sh, 0.30, 0.45));
+    log.push('comp_sky=' + rd(App.fboComp.fb, 0, App.sw, App.sh, 0.10, 0.92));
+    log.push('comp_floor=' + rd(App.fboComp.fb, 0, App.sw, App.sh, 0.50, 0.12));
+    var px = new Uint8Array(4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.readPixels(Math.floor(App.W * 0.3), Math.floor(App.H * 0.45), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    log.push('screen=' + px.join(','));
+    log.push('glErr2=' + gl.getError());
+  }catch(e){ log.push('DIAGERR ' + e.message + ' | ' + e.stack); }
+  var pre = document.createElement('pre');
+  pre.id = 'diag';
+  pre.textContent = '===DIAG===\n' + log.join('\n') + '\n===END===';
+  document.body.appendChild(pre);
+});
+</script>
+</body>
+</html>
